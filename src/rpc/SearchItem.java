@@ -3,6 +3,7 @@ package rpc;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -47,9 +48,11 @@ public class SearchItem extends HttpServlet {
 		String term = request.getParameter("term");
 		List<Item> items = conn.searchItems(userId, lat, lon, term);
 		List<JSONObject> list = new ArrayList<>();
+		Set<String> favorite = conn.getFavoriteItemIds(userId);
 		try {
 			for (Item item : items) {
 				JSONObject obj = item.toJSONObject();
+				obj.put("favorite", favorite.contains(item.getItemId()));
 				list.add(obj);
 			}
 		} catch (Exception e) {

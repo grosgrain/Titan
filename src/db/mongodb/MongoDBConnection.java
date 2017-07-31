@@ -57,7 +57,7 @@ public class MongoDBConnection implements DBConnection {
 	@Override
 	public void unsetFavoriteItems(String userId, List<String> itemIds) {
 		db.getCollection("users").updateOne(new Document("user_id", userId),
-				new Document("$pull", new Document("favorite", new Document("$each", itemIds))));
+				new Document("$pullAll", new Document("favorite", itemIds)));
 
 	}
 
@@ -97,6 +97,7 @@ public class MongoDBConnection implements DBConnection {
 			builder.setSnippetUrl(doc.getString("snippet_url"));
 			builder.setImageUrl(doc.getString("image_url"));
 			builder.setUrl(doc.getString("url"));
+			builder.setCategories(getCategories(doc.getString("item_id")));
 			favoriteItems.add(builder.build());
 		}
 		return favoriteItems;
