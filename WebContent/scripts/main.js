@@ -38,7 +38,7 @@
 		function(res) {
 			var result = JSON.parse(res);
 
-			if (result.status === 'OK') {
+			if (result.result === 'SUCCESS') {
 				onSessionValid(result);
 			}
 		});
@@ -409,7 +409,7 @@
 		// successful callback
 		function(res) {
 			var result = JSON.parse(res);
-			if (result.status === 'OK') {
+			if (result.result === 'SUCCESS') {
 				li.dataset.favorite = favorite;
 				favIcon.className = favorite ? 'fa fa-heart' : 'fa fa-heart-o';
 			}
