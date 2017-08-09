@@ -3,22 +3,85 @@
 	/**
 	 * Variables
 	 */
-	var user_id = '1111';
+	var user_id = '';
 	var user_fullname = '';
-	var lng = 29.830869;
-	var lat = -146.599061;
+	var lng = -122.08;
+	var lat = 37.38;
 
 	/**
 	 * Initialize
 	 */
 	function init() {
 		// Register event listeners
-		initGeoLocation();
-		window.addEventListener("load", loadNearbyItems);
+		$('login-btn').addEventListener('click', login);
 		$('nearby-btn').addEventListener('click', loadNearbyItems);
 		$('fav-btn').addEventListener('click', loadFavoriteItems);
 		$('recommend-btn').addEventListener('click', loadRecommendedItems);
-		
+
+		validateSession();
+	}
+
+	/**
+	 * Session
+	 */
+	function validateSession() {
+		// The request parameters
+		var url = './LoginServlet';
+		var req = JSON.stringify({});
+
+		// display loading message
+		showLoadingMessage('Validating session...');
+
+		// make AJAX call
+		ajax('GET', url, req,
+		// session is still valid
+		function(res) {
+			var result = JSON.parse(res);
+
+			if (result.status === 'OK') {
+				onSessionValid(result);
+			}
+		});
+	}
+
+	function onSessionValid(result) {
+		user_id = result.user_id;
+		user_fullname = result.name;
+
+		var loginForm = $('login-form');
+		var itemNav = $('item-nav');
+		var itemList = $('item-list');
+		var avatar = $('avatar');
+		var welcomeMsg = $('welcome-msg');
+		var logoutBtn = $('logout-link');
+
+		welcomeMsg.innerHTML = 'Welcome, ' + user_fullname;
+
+		showElement(itemNav);
+		showElement(itemList);
+		showElement(avatar);
+		showElement(welcomeMsg);
+		showElement(logoutBtn, 'inline-block');
+		hideElement(loginForm);
+
+		initGeoLocation();
+	}
+
+	function onSessionInvalid() {
+		var loginForm = $('login-form');
+		var itemNav = $('item-nav');
+		var itemList = $('item-list');
+		var avatar = $('avatar');
+		var welcomeMsg = $('welcome-msg');
+		var logoutBtn = $('logout-link');
+
+		hideElement(itemNav);
+		hideElement(itemList);
+		hideElement(avatar);
+		hideElement(logoutBtn);
+		hideElement(welcomeMsg);
+
+		showElement(loginForm);
 	}
 
 	function initGeoLocation() {
@@ -60,6 +123,44 @@
 			}
 			loadNearbyItems();
 		});
+	}
+
+	// -----------------------------------
+	// Login
+	// -----------------------------------
+
+	function login() {
+		var username = $('username').value;
+		var password = $('password').value;
+		password = md5(username + md5(password));
+
+		// The request parameters
+		var url = './LoginServlet';
+		var params = 'user_id=' + username + '&password=' + password;
+		var req = JSON.stringify({});
+
+		ajax('POST', url + '?' + params, req,
+		// successful callback
+		function(res) {
+			var result = JSON.parse(res);
+
+			// successfully logged in
+			if (result.status === 'OK') {
+				onSessionValid(result);
+			}
+		},
+		// error
+		function() {
+			showLoginError();
+		});
+	}
+
+	function showLoginError() {
+		$('login-error').innerHTML = 'Invalid username or password';
+	}
+
+	function clearLoginError() {
+		$('login-error').innerHTML = '';
 	}
 
 	// -----------------------------------
@@ -307,8 +408,8 @@
 		ajax(method, url, req,
 		// successful callback
 		function(res) {
-			var Result = JSON.parse(res);
-			if (Result.result === 'SUCCESS') {
+			var result = JSON.parse(res);
+			if (result.status === 'OK') {
 				li.dataset.favorite = favorite;
 				favIcon.className = favorite ? 'fa fa-heart' : 'fa fa-heart-o';
 			}
@@ -416,7 +517,7 @@
 		});
 
 		address.innerHTML = item.address.replace(/,/g, '<br/>').replace(/\"/g,
-				'') + '<br/>' + item.city + '<br/>' + item.state;
+				'');
 		li.appendChild(address);
 
 		// favorite link
